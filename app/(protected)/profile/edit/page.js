@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-
+import { useRouter } from "next/navigation";
 
 
 const EditProfile = () => {
@@ -24,29 +24,34 @@ const EditProfile = () => {
 
   // 🔥 FETCH PROFILE
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await fetch("/api/profile", {
-          credentials: "include",
-        });
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch("/api/profile", {
+        credentials: "include",
+      });
 
-        if (!res.ok) return;
-
-        const data = await res.json();
-
-        setName(data.name || "");
-        setEmail(data.email || "");
-        setAge(data.age || "");
-        setHeight(data.height || "");
-        setWeight(data.weight || "");
-        setGender(data.gender || "");
-      } catch (error) {
-        console.error(error);
+      if (!res.ok) {
+        console.log("Not logged in");
+        return;
       }
-    };
 
-    fetchProfile();
-  }, []);
+      const data = await res.json();
+
+      if (!data) return; // safety
+
+      setName(data.name || "");
+      setEmail(data.email || "");
+      setAge(data.age || "");
+      setHeight(data.height || "");
+      setWeight(data.weight || "");
+      setGender(data.gender || "");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  fetchProfile();
+}, []);
 
   const updateProfile = async (e) => {
     e.preventDefault();

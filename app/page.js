@@ -8,14 +8,13 @@ import { useSession } from "next-auth/react";
 export default function Home() {
 
 
-  const { data: session } = useSession(); // NextAuth
-  const [jwtLoggedIn, setJwtLoggedIn] = useState(false);
+const { data: session, status } = useSession();
+const [jwtLoggedIn, setJwtLoggedIn] = useState(false);
 
-  // 🔥 Check JWT login
-  const checkJWT = async () => {
+const checkJWT = async () => {
   try {
     const res = await fetch("/api/profile", {
-      credentials: "include", // 🔥 VERY IMPORTANT
+      credentials: "include",
     });
 
     setJwtLoggedIn(res.ok);
@@ -24,9 +23,11 @@ export default function Home() {
   }
 };
 
-  const loggedIn = !!session || jwtLoggedIn;
+useEffect(() => {
+  checkJWT();
+}, []);
 
-
+const loggedIn = status === "authenticated" || jwtLoggedIn;
 
 
   return (
