@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+export const dynamic = "force-dynamic";
+
+import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 
@@ -8,41 +10,52 @@ const Login = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // 🔥 message from middleware
-  const urlMessage = searchParams.get("message");
-
+  const [urlMessage, setUrlMessage] = useState("");
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // ✅ SAFE way to read query params (prevents build crash)
+  useEffect(() => {
+    if (searchParams) {
+      const msg = searchParams.get("message");
+      if (msg) setUrlMessage(msg);
+    }
+  }, [searchParams]);
+
   const handleCheck = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // 🔥 FIX (VERY IMPORTANT)
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.ok) {
-      setMessage("Login successful");
+      if (res.ok) {
+        setMessage("Login successful");
 
-      // 🔥 FORCE reload so middleware gets cookie
-      window.location.href = "/profile";
-    } else {
-      setMessage(data.message);
+        // ✅ safer redirect
+        window.location.href = "/profile";
+      } else {
+        setMessage(data.message || "Login failed");
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage("Something went wrong");
     }
   };
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
 
-      {/* GLOW */}
+      {/* Glow Effects */}
       <div className="absolute w-[400px] h-[400px] bg-blue-500/20 blur-[120px] rounded-full top-10 left-10"></div>
       <div className="absolute w-[400px] h-[400px] bg-green-500/20 blur-[120px] rounded-full bottom-10 right-10"></div>
 
@@ -68,6 +81,7 @@ const Login = () => {
             placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
           <input
@@ -76,6 +90,7 @@ const Login = () => {
             placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
 
           <button
@@ -106,7 +121,7 @@ const Login = () => {
           onClick={() => signIn("google")}
           className="w-full flex items-center justify-center gap-3 p-3 bg-white text-black rounded-lg hover:bg-gray-200 transition"
         >
-          <img src="/google.png" className="w-5 h-5" />
+          <img src="/google.png" className="w-5 h-5" alt="Google" />
           Continue with Google
         </button>
 
