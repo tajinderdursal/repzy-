@@ -2,11 +2,11 @@
 
 export const dynamic = "force-dynamic";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 
-const Login = () => {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -15,7 +15,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // ✅ SAFE way to read query params (prevents build crash)
+  // ✅ SAFE way to read query params
   useEffect(() => {
     if (searchParams) {
       const msg = searchParams.get("message");
@@ -40,8 +40,6 @@ const Login = () => {
 
       if (res.ok) {
         setMessage("Login successful");
-
-        // ✅ safer redirect
         window.location.href = "/profile";
       } else {
         setMessage(data.message || "Login failed");
@@ -128,6 +126,12 @@ const Login = () => {
       </div>
     </div>
   );
-};
+}
 
-export default Login;
+export default function Login() {
+  return (
+    <Suspense fallback={<div className="text-white">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
+  );
+}
