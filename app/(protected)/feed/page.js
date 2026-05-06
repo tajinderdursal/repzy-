@@ -162,7 +162,7 @@ export default function Feed() {
 
               <button
                 onClick={() => handleLike(post._id)}
-                className="absolute top-3 right-3 bg-black/60 p-2 rounded-full text-white opacity-0 group-hover:opacity-100"
+               className="absolute top-3 right-3 bg-black/60 p-2 rounded-full text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition"
               >
                 {likes[post._id]?.isLiked ? "❤️" : "🤍"}
               </button>

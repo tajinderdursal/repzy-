@@ -2,13 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
+import { useParams, useRouter } from "next/navigation";
 
 export default function PostPage() {
-
-
-
-  
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [likes, setLikes] = useState({});
@@ -25,7 +21,9 @@ export default function PostPage() {
       try {
         const postRes = await fetch(`/api/post/${postId}`);
         const postData = await postRes.json();
-        setPost(postData);
+
+        // 🔥 handle both cases (important)
+        setPost(postData?.post || postData);
 
         const likeRes = await fetch(`/api/like/${postId}`);
         const likeData = await likeRes.json();
@@ -48,6 +46,8 @@ export default function PostPage() {
 
   // 🔥 LIKE
   const handleLike = async (photoId) => {
+    if (!photoId) return;
+
     const current = likes[photoId];
     if (!current) return;
 
@@ -93,21 +93,51 @@ export default function PostPage() {
 
   // 🔥 COMMENT
   const addComment = async (photoId, text) => {
-    if (!text.trim()) return;
+    if (!text.trim() || !photoId) return;
 
-    const res = await fetch("/api/comment", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      credentials: "include",
-      body: JSON.stringify({ photoId, text })
-    });
+    const tempComment = {
+      _id: Date.now(),
+      text,
+      userId: { name: "You" }
+    };
 
-    const newComment = await res.json();
-    setComments(prev => [...prev, newComment]);
+    setComments(prev => [...prev, tempComment]);
+
+    try {
+      const res = await fetch("/api/comment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({ photoId, text })
+      });
+
+      if (!res.ok) throw new Error("Failed");
+
+      const newComment = await res.json();
+
+      setComments(prev =>
+        prev.map(c =>
+          c._id === tempComment._id
+            ? {
+                ...c,
+                _id: newComment?._id || c._id,
+                userId: {
+                  name: newComment?.userId?.name || "You"
+                }
+              }
+            : c
+        )
+      );
+
+    } catch (err) {
+      console.error(err);
+      setComments(prev => prev.filter(c => c._id !== tempComment._id));
+    }
   };
 
+  // ✅ 🔥 CRITICAL FIX (prevents crash)
   if (!post) {
     return (
       <div className="flex justify-center items-center min-h-screen text-white">
@@ -117,89 +147,102 @@ export default function PostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-4">
-   <div className="mt-32 mb-30">
+    <div className="min-h-screen bg-black text-white px-4 md:px-10 py-24 relative">
 
-      </div>
-      {/* 🔥 BACK BUTTON */}
+      {/* 🔥 BACKGROUND GLOW */}
+      <div className="absolute w-[400px] h-[400px] bg-blue-500/20 blur-[140px] rounded-full top-10 left-10"></div>
+      <div className="absolute w-[400px] h-[400px] bg-green-500/20 blur-[140px] rounded-full bottom-10 right-10"></div>
+
+      {/* 🔙 BACK BUTTON */}
       <button
         onClick={() => router.back()}
-        className="mb-4 bg-gray-800 px-4 py-2 rounded hover:bg-gray-700"
+        className="relative z-10 mb-6 px-4 py-2 text-sm rounded-lg bg-white/10 border border-white/20 hover:bg-white/20 transition"
       >
         ← Back
       </button>
 
-      {/* 🔥 MAIN LAYOUT */}
-      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6">
+      {/* 🔥 MAIN CONTAINER */}
+      <div className="relative z-10 max-w-6xl mx-auto grid md:grid-cols-2 gap-6">
 
-        {/* 🔥 IMAGE */}
-        <div className="bg-gray-900 rounded-xl overflow-hidden flex justify-center items-center">
-          <img
-            src={post.image}
-            className="w-full h-full object-contain"
-          />
+        {/* 📸 IMAGE CARD */}
+        <div className="rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 overflow-hidden shadow-xl flex items-center justify-center">
+          {post?.image && (
+            <img
+              src={post.image}
+              className="w-full h-full object-contain"
+              alt="Post"
+            />
+          )}
         </div>
 
-        {/* 🔥 RIGHT PANEL */}
-        <div className="bg-gray-900 rounded-xl p-4 flex flex-col h-[80vh]">
+        {/* 🧾 RIGHT PANEL */}
+        <div className="rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-xl p-5 flex flex-col h-[80vh]">
 
-          {/* USER */}
-          <div className="mb-4">
-            <Link href={`/profile/${post.userId?._id}`}>
-              <p className="font-bold text-lg hover:text-purple-400">
-                {post.userId?.name || "Unknown"}
-              </p>
-            </Link>
-          </div>
+          {/* 👤 USER */}
+          <Link href={`/profile/${post?.userId?._id || ""}`}>
+            <p className="font-bold text-lg hover:text-blue-400 transition cursor-pointer">
+              {post?.userId?.name || "Unknown"}
+            </p>
+          </Link>
 
-          {/* CAPTION */}
-          <p className="mb-4 text-gray-300">
-            {post.caption}
+          {/* 📝 CAPTION */}
+          <p className="mt-3 text-gray-300">
+            {post?.caption || ""}
           </p>
 
-          {/* LIKE */}
-          <div className="mb-4">
+          {/* ❤️ LIKE */}
+          <div className="mt-4 flex items-center justify-between">
             <button
-              onClick={() => handleLike(post._id)}
-              className="text-lg"
+              onClick={() => handleLike(post?._id)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                likes[post?._id]?.isLiked
+                  ? "bg-red-500/20 text-red-400"
+                  : "bg-white/10 hover:bg-white/20"
+              }`}
             >
-              {likes[post._id]?.isLiked ? "❤️ Liked" : "🤍 Like"}
+              {likes[post?._id]?.isLiked ? "❤️ Liked" : "🤍 Like"}
             </button>
 
-            <p className="text-sm text-gray-400">
-              {likes[post._id]?.totalLikes ?? 0} likes
-            </p>
+            <span className="text-sm text-gray-400">
+              {likes[post?._id]?.totalLikes ?? 0} likes
+            </span>
           </div>
 
-          {/* COMMENTS (SCROLLABLE) */}
-          <div className="flex-1 overflow-y-auto space-y-2 mb-3">
+          {/* 💬 COMMENTS */}
+          <div className="flex-1 overflow-y-auto mt-5 space-y-3 pr-1">
             {comments.length > 0 ? (
               comments.map((c) => (
-                <p key={c._id} className="text-sm">
-                  <b>{c.userId?.name}</b> {c.text}
-                </p>
+                <div
+                  key={c._id}
+                  className="bg-white/5 border border-white/10 rounded-lg px-3 py-2"
+                >
+                  <span className="font-semibold text-blue-400">
+                    {c.userId?.name}
+                  </span>{" "}
+                  <span className="text-sm text-gray-300">{c.text}</span>
+                </div>
               ))
             ) : (
-              <p className="text-gray-400">No comments yet</p>
+              <p className="text-gray-400 text-sm">No comments yet</p>
             )}
           </div>
 
-          {/* COMMENT INPUT */}
-          <input
-            className="border p-2 rounded text-black"
-            placeholder="Write a comment..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                addComment(post._id, e.target.value);
-                e.target.value = "";
-              }
-            }}
-          />
+          {/* ✍️ COMMENT INPUT */}
+          <div className="mt-4">
+            <input
+              className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 outline-none focus:border-blue-400 text-white placeholder-gray-400"
+              placeholder="Write a comment..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  addComment(post?._id, e.target.value);
+                  e.target.value = "";
+                }
+              }}
+            />
+          </div>
 
         </div>
-
       </div>
-
     </div>
   );
 }

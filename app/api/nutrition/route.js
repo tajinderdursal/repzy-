@@ -19,7 +19,7 @@ export async function GET(req) {
 
     const data = await res.json();
 
-    console.log("API DATA:", data); // 🔥 debug
+   
 
     return NextResponse.json(data);
   } catch (error) {

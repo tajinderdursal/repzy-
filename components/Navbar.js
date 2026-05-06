@@ -136,27 +136,31 @@ export default function Navbar() {
       </div>
 
       {/* MOBILE MENU */}
-      {menuOpen && (
-        <div className="absolute top-20 w-[90%] bg-black rounded-xl p-6 flex flex-col gap-4 text-white md:hidden">
+     {menuOpen && (
+  <div className="absolute top-20 w-[90%] 
+    bg-white/10 backdrop-blur-lg border border-white/20 
+    rounded-2xl p-6 flex flex-col gap-4 text-white md:hidden shadow-xl">
 
-          <Link href="/">Home</Link>
-          <Link href="/feed">Feed</Link>
-          <Link href="/progress">Progress</Link>
-          <Link href="/dashboard">Dashboard</Link>
+    <Link  href="/" onClick={() => setMenuOpen(false)}>Home</Link>
+    <Link href="/feed" onClick={() => setMenuOpen(false)}>Feed</Link>
+    <Link href="/progress" onClick={() => setMenuOpen(false)}>Progress</Link>
+    <Link href="/nutrition" onClick={() => setMenuOpen(false)}>Nutrition</Link>
+    <Link href="/exercises" onClick={() => setMenuOpen(false)}>Workout</Link>
+    <Link href="/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</Link>
 
-          {!loggedIn ? (
-            <>
-              <Link href="/login">Login</Link>
-              <Link href="/signup">Signup</Link>
-            </>
-          ) : (
-            <>
-              <Link href="/profile">Profile</Link>
-              <button onClick={handleLogout}>Logout</button>
-            </>
-          )}
-        </div>
-      )}
+    {!loggedIn ? (
+      <>
+        <Link href="/login" onClick={() => setMenuOpen(false)}>Login</Link>
+        <Link href="/signup" onClick={() => setMenuOpen(false)}>Signup</Link>
+      </>
+    ) : (
+      <>
+        <Link href="/profile" onClick={() => setMenuOpen(false)}>Profile</Link>
+        <button onClick={handleLogout}>Logout</button>
+      </>
+    )}
+  </div>
+)}
     </div>
   );
 }

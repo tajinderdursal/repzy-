@@ -143,7 +143,7 @@ export default function Profile() {
 
 <button
   onClick={() => router.push("/profile/edit")}
-  className="p-3 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg font-semibold hover:scale-[1.02] transition"
+  className="p-3 mt-8 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg font-semibold hover:scale-[1.02] transition"
 >
   Edit Profile
 </button>
