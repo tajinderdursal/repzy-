@@ -258,7 +258,14 @@ export default function Feed() {
           </div>
         ))}
       </div>
-
+   <div className="mt-12 flex justify-center">
+  <div className="px-6 py-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-sm">
+    <span className="bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent font-medium">
+      You're all caught up!
+    </span>
+  </div>
+</div>
     </div>
+    
   );
 }
